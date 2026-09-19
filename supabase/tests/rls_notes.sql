@@ -1,0 +1,6 @@
+-- Checklist for Supabase test db:
+-- 1. authenticated user A can read only profile A.
+-- 2. user A cannot update profile B.
+-- 3. non-admin cannot call admin_list_profiles successfully.
+-- 4. admin can call admin_list_profiles.
+-- 5. anon has no table access.
