@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FURI Mining Algeria v4</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2e;--panel2:#11243c;--text:#eef5ff;--muted:#91a4bd;--line:#1e3552;--green:#35d07f;--red:#ff7474}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#06101d,#0a1728);color:var(--text);font-family:Tahoma,Arial,sans-serif}button,input{font:inherit}
+button{cursor:pointer}.wrap{max-width:1180px;margin:auto;padding:22px}.logo{font-size:30px;font-weight:900}.logo b{color:var(--green)}
+.auth{max-width:560px;margin:7vh auto}.card{background:rgba(13,27,46,.94);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 12px 35px #0002}.hidden{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}.field input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#081525;color:var(--text)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.btn{padding:11px 15px;border-radius:10px;border:1px solid var(--line);background:#10243a;color:var(--text)}.primary{background:var(--green);color:#06110b;border-color:var(--green);font-weight:800}
+.notice{padding:13px;border-radius:11px;background:#241e0b;border:1px solid #5d4b20;color:#ffe7a2;line-height:1.7;margin:14px 0}.error{background:#2a1116;border-color:#65323a;color:#ffc4c4}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.tag{border:1px solid #2b536f;border-radius:999px;padding:7px 11px;font-size:12px;color:#b9d8ef}
+.nav{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}.nav button{background:#10243a;color:#fff;border:1px solid #294b69;padding:10px 13px;border-radius:9px}.nav button.active{background:#163a4c}
+.stat .label{color:var(--muted);font-size:12px}.stat .value{font-size:25px;font-weight:800;margin-top:7px}.section{margin-top:16px}.muted{color:var(--muted);font-size:12px}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:right;font-size:12px}.table th{color:var(--muted)}
+.status{padding:4px 8px;border-radius:999px;background:#123723;color:#8cf0b3}.danger{background:#3b171c;color:#ffc6c6}.footer{color:var(--muted);font-size:11px;text-align:center;margin-top:20px}
+@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid,.form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="auth" class="wrap auth">
+ <div class="card">
+  <div class="logo">FURI <b>Mining</b></div><div class="muted">v4 • الجزائر</div>
+  <div id="msg" class="notice hidden"></div>
+  <div id="login">
+   <h2>تسجيل الدخول</h2><div class="form">
+   <div class="field"><label>البريد الإلكتروني</label><input id="li_email" type="email" autocomplete="email"></div>
+   <div class="field"><label>كلمة المرور</label><input id="li_pass" type="password" autocomplete="current-password"></div></div>
+   <div class="actions"><button class="btn primary" onclick="signIn()">دخول</button><button class="btn" onclick="toggleAuth()">إنشاء حساب</button></div>
+  </div>
+  <div id="register" class="hidden">
+   <h2>إنشاء حساب</h2><div class="form">
+   <div class="field"><label>اسم المستخدم</label><input id="r_user" maxlength="32"></div>
+   <div class="field"><label>البريد الإلكتروني</label><input id="r_email" type="email"></div>
+   <div class="field"><label>كلمة المرور</label><input id="r_pass" type="password" minlength="8"></div>
+   <div class="field"><label>الاسم الأول</label><input id="r_first"></div>
+   <div class="field"><label>اسم العائلة</label><input id="r_last"></div>
+   <div class="field"><label>تاريخ الميلاد</label><input id="r_dob" type="date" onchange="updateAge()"></div>
+   <div class="field"><label>العمر</label><input id="r_age" readonly></div>
+   <div class="field"><label>الدولة</label><input value="الجزائر" readonly></div></div>
+   <div class="actions"><button class="btn primary" onclick="signUp()">إنشاء الحساب</button><button class="btn" onclick="toggleAuth()">لدي حساب</button></div>
+  </div>
+ </div>
+</div>
+
+<div id="app" class="wrap hidden">
+ <div class="top"><div><div class="logo">FURI <b>Mining</b></div><div id="hello" class="muted"></div></div><div class="tag">DZ • Supabase • v4</div></div>
+ <div id="banner" class="notice">نسخة v4: الواجهة جاهزة لـ GitHub Pages. تسوية USDT الحقيقية غير مفعلة بعد.</div>
+ <div class="nav">
+  <button data-p="home" onclick="page('home')">الرئيسية</button><button data-p="profile" onclick="page('profile')">الملف الشخصي</button>
+  <button data-p="plans" onclick="page('plans')">الباقات</button><button data-p="ledger" onclick="page('ledger')">FURI</button>
+  <button data-p="admin" onclick="page('admin')">الإدارة</button><button onclick="logout()">خروج</button>
+ </div>
+ <div id="content"></div><div class="footer">FURI Mining Algeria v4</div>
+</div>
+<script src="config.js"></script>
+<script>
+let sb, session, profile;
+function showMsg(t,err=false){msg.textContent=t;msg.className='notice '+(err?'error':'');msg.classList.remove('hidden')}
+function toggleAuth(){login.classList.toggle('hidden');register.classList.toggle('hidden');msg.classList.add('hidden')}
+function age(d){if(!d)return null;let x=new Date(d),n=new Date(),a=n.getFullYear()-x.getFullYear();if(n<new Date(n.getFullYear(),x.getMonth(),x.getDate()))a--;return a}
+function updateAge(){r_age.value=age(r_dob.value)??''}
+async function init(){
+ if(!window.FURI_SUPABASE_URL||!window.FURI_SUPABASE_PUBLISHABLE_KEY){showMsg('ضع بيانات Supabase في config.js أولًا.',true);return}
+ sb=window.supabase.createClient(window.FURI_SUPABASE_URL,window.FURI_SUPABASE_PUBLISHABLE_KEY)
+ const r=await sb.auth.getSession(); session=r.data.session
+ if(session) await enter()
+ sb.auth.onAuthStateChange((_e,s)=>{session=s;if(s) enter();})
+}
+async function signUp(){
+ const dob=r_dob.value,a=age(dob)
+ if(!r_user.value||!r_email.value||!r_pass.value||!r_first.value||!r_last.value||!dob){showMsg('أكمل جميع الحقول.',true);return}
+ if(a<18){showMsg('يجب أن يكون العمر 18 سنة أو أكثر.',true);return}
+ const {data,error}=await sb.auth.signUp({email:r_email.value,password:r_pass.value,options:{data:{username:r_user.value.trim(),first_name:r_first.value.trim(),last_name:r_last.value.trim(),date_of_birth:dob,country_code:'DZ'}}})
+ if(error){showMsg(error.message,true);return}
+ if(data.session) showMsg('تم إنشاء الحساب وتسجيل الدخول.')
+ else showMsg('تم إنشاء الحساب. إذا كان تأكيد البريد مفعّلًا في مشروع Supabase، أكمل التأكيد ثم سجّل الدخول.')
+}
+async function signIn(){
+ const {data,error}=await sb.auth.signInWithPassword({email:li_email.value,password:li_pass.value})
+ if(error){showMsg('تعذر تسجيل الدخول. تحقق من البيانات أو حالة البريد.',true);return}
+ await enter()
+}
+async function enter(){
+ const u=session?.user;if(!u)return
+ const r=await sb.from('profiles').select('id,username,first_name,last_name,date_of_birth,country_code,status').eq('id',u.id).single()
+ if(r.error){showMsg('تم تسجيل الدخول لكن ملف المستخدم غير متاح. تحقق من migration v3.',true);return}
+ profile=r.data;auth.classList.add('hidden');app.classList.remove('hidden');hello.textContent='مرحبًا '+profile.first_name+' '+profile.last_name;page('home')
+}
+async function logout(){await sb.auth.signOut();session=null;profile=null;app.classList.add('hidden');auth.classList.remove('hidden')}
+async function page(p){
+ document.querySelectorAll('.nav button[data-p]').forEach(x=>x.classList.toggle('active',x.dataset.p===p))
+ let h=''
+ if(p==='home')h=`<div class="grid"><div class="card stat"><div class="label">FURI</div><div class="value">—</div></div><div class="card stat"><div class="label">الحالة</div><div class="value">${profile.status}</div></div><div class="card stat"><div class="label">العمر</div><div class="value">${age(profile.date_of_birth)}</div></div><div class="card stat"><div class="label">الدولة</div><div class="value">الجزائر</div></div></div>`
+ if(p==='profile')h=`<div class="card"><h2>الملف الشخصي</h2><div class="form"><div class="field"><label>اسم المستخدم</label><input value="${esc(profile.username)}" readonly></div><div class="field"><label>الاسم</label><input value="${esc(profile.first_name+' '+profile.last_name)}" readonly></div><div class="field"><label>تاريخ الميلاد</label><input value="${profile.date_of_birth}" readonly></div><div class="field"><label>العمر</label><input value="${age(profile.date_of_birth)}" readonly></div></div></div>`
+ if(p==='plans'){let r=await sb.from('plans').select('id,name,price_usdt,duration_days,furi_amount').eq('active',true).order('price_usdt');h='<div class="grid">'+(r.data||[]).map(x=>`<div class="card"><h3>${esc(x.name)}</h3><div class="stat value">${x.price_usdt} USDT</div><div class="muted">${x.duration_days} يوم • ${x.furi_amount} FURI</div></div>`).join('')+'</div>'}
+ if(p==='ledger'){let r=await sb.from('furi_ledger').select('amount,entry_type,note,created_at').order('created_at',{ascending:false}).limit(50);h='<div class="card"><h2>سجل FURI</h2>'+(r.error?'<div class="notice error">تعذر قراءة السجل.</div>':table(r.data))+'</div>'}
+ if(p==='admin')h=await adminPage()
+ content.innerHTML=h
+}
+async function adminPage(){
+ const {data,error}=await sb.rpc('admin_list_profiles')
+ if(error)return `<div class="card"><h2>لوحة الإدارة</h2><div class="notice error">هذه المنطقة تتطلب دور إدارة معتمد.</div></div>`
+ return `<div class="card"><h2>لوحة الإدارة</h2><div class="muted">المستخدمون: ${data.length}</div>${table(data)}</div>`
+}
+function table(a){if(!a?.length)return '<div class="muted">لا توجد بيانات.</div>';let cols=Object.keys(a[0]);return '<table class="table"><thead><tr>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+a.map(r=>'<tr>'+cols.map(c=>'<td>'+esc(r[c])+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]) )}
+init()
+</script>
+</body></html>
