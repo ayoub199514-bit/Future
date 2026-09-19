@@ -61,10 +61,13 @@ let sb, session, profile;
 function showMsg(t,err=false){msg.textContent=t;msg.className='notice '+(err?'error':'');msg.classList.remove('hidden')}
 function toggleAuth(){login.classList.toggle('hidden');register.classList.toggle('hidden');msg.classList.add('hidden')}
 function age(d){if(!d)return null;let x=new Date(d),n=new Date(),a=n.getFullYear()-x.getFullYear();if(n<new Date(n.getFullYear(),x.getMonth(),x.getDate()))a--;return a}
-function updateAge(){r_age.value=age(r_dob.value)??''}
+function maxBirthDate(){const d=new Date();d.setFullYear(d.getFullYear()-18);return d.toISOString().slice(0,10)}
+function updateAge(){r_age.value=r_dob.value?(age(r_dob.value)??''):' ';if(r_dob.value&&r_dob.value>maxBirthDate()){showMsg('يجب أن يكون العمر 18 سنة أو أكثر. اختر تاريخ ميلاد صحيحًا.',true);r_dob.value='';r_age.value='';return}}
+
 async function init(){
  if(!window.FURI_SUPABASE_URL||!window.FURI_SUPABASE_PUBLISHABLE_KEY){showMsg('ضع بيانات Supabase في config.js أولًا.',true);return}
  sb=window.supabase.createClient(window.FURI_SUPABASE_URL,window.FURI_SUPABASE_PUBLISHABLE_KEY)
+ r_dob.max=maxBirthDate()
  const r=await sb.auth.getSession(); session=r.data.session
  if(session) await enter()
  sb.auth.onAuthStateChange((_e,s)=>{session=s;if(s) enter();})
