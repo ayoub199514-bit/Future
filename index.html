@@ -38,7 +38,7 @@ button{cursor:pointer}.wrap{max-width:1180px;margin:auto;padding:22px}.logo{font
    <div class="field"><label>الاسم الأول</label><input id="r_first"></div>
    <div class="field"><label>اسم العائلة</label><input id="r_last"></div>
    <div class="field"><label>تاريخ الميلاد</label><input id="r_dob" type="date" onchange="updateAge()"></div>
-   <div class="field"><label>العمر</label><input id="r_age" type="number" inputmode="numeric" min="18" max="120" placeholder="العمر"></div>
+   <div class="field"><label>العمر</label><input id="r_age" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" placeholder="اكتب عمرك" onclick="this.focus()" onfocus="this.removeAttribute('readonly')"></div>
    <div class="field"><label>الدولة</label><input value="الجزائر" readonly></div></div>
    <div class="actions"><button class="btn primary" onclick="signUp()">إنشاء الحساب</button><button class="btn" onclick="toggleAuth()">لدي حساب</button></div>
   </div>
@@ -73,9 +73,9 @@ async function init(){
  sb.auth.onAuthStateChange((_e,s)=>{session=s;if(s) enter();})
 }
 async function signUp(){
- const dob=r_dob.value,a=age(dob)
+ const dob=r_dob.value,a=age(dob),manualAge=parseInt(r_age.value,10)
  if(!r_user.value||!r_email.value||!r_pass.value||!r_first.value||!r_last.value||!dob){showMsg('أكمل جميع الحقول.',true);return}
- if(a<18){showMsg('يجب أن يكون العمر 18 سنة أو أكثر.',true);return}
+ if(a<18 || !Number.isFinite(manualAge) || manualAge<18 || manualAge>120){showMsg('يجب أن يكون العمر 18 سنة أو أكثر.',true);return}
  const {data,error}=await sb.auth.signUp({email:r_email.value,password:r_pass.value,options:{data:{username:r_user.value.trim(),first_name:r_first.value.trim(),last_name:r_last.value.trim(),date_of_birth:dob,country_code:'DZ'}}})
  if(error){showMsg(error.message,true);return}
  if(data.session) showMsg('تم إنشاء الحساب وتسجيل الدخول.')
