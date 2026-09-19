@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FURI Mining Algeria v4</title>
+<title>FURI Mining Algeria v5</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#07111f;--panel:#0d1b2e;--panel2:#11243c;--text:#eef5ff;--muted:#91a4bd;--line:#1e3552;--green:#35d07f;--red:#ff7474}
@@ -22,7 +22,7 @@ button{cursor:pointer}.wrap{max-width:1180px;margin:auto;padding:22px}.logo{font
 <body>
 <div id="auth" class="wrap auth">
  <div class="card">
-  <div class="logo">FURI <b>Mining</b></div><div class="muted">v4 • الجزائر</div>
+  <div class="logo">FURI <b>Mining</b></div><div class="muted">v5 • الجزائر • Supabase • BSC</div>
   <div id="msg" class="notice hidden"></div>
   <div id="login">
    <h2>تسجيل الدخول</h2><div class="form">
@@ -46,14 +46,14 @@ button{cursor:pointer}.wrap{max-width:1180px;margin:auto;padding:22px}.logo{font
 </div>
 
 <div id="app" class="wrap hidden">
- <div class="top"><div><div class="logo">FURI <b>Mining</b></div><div id="hello" class="muted"></div></div><div class="tag">DZ • Supabase • v4</div></div>
+ <div class="top"><div><div class="logo">FURI <b>Mining</b></div><div id="hello" class="muted"></div></div><div class="tag">DZ • Supabase • v5 • BSC/USDT</div></div>
  <div id="banner" class="notice">الدفع متاح عبر USDT على BNB Smart Chain (BEP20). لا تغيّر الشبكة أثناء الدفع.</div>
  <div class="nav">
   <button data-p="home" onclick="page('home')">الرئيسية</button><button data-p="profile" onclick="page('profile')">الملف الشخصي</button>
-  <button data-p="plans" onclick="page('plans')">الباقات</button><button data-p="ledger" onclick="page('ledger')">FURI</button>
+  <button data-p="plans" onclick="page('plans')">الباقات</button><button data-p="deposit" onclick="page('deposit')">الإيداع</button><button data-p="withdraw" onclick="page('withdraw')">السحب</button><button data-p="history" onclick="page('history')">السجل</button><button data-p="ledger" onclick="page('ledger')">FURI</button>
   <button data-p="admin" onclick="page('admin')">الإدارة</button><button onclick="logout()">خروج</button>
  </div>
- <div id="content"></div><div class="footer">FURI Mining Algeria v4</div>
+ <div id="content"></div><div class="footer">FURI Mining Algeria v5 — Supabase • BSC • USDT</div>
 </div>
 <script src="config.js"></script>
 <script>
@@ -105,6 +105,9 @@ async function page(p){
  if(p==='home')h=`<div class="grid"><div class="card stat"><div class="label">FURI</div><div class="value">${await currentFuri()}</div></div><div class="card stat"><div class="label">الحالة</div><div class="value">${profile.status}</div></div><div class="card stat"><div class="label">العمر</div><div class="value">${age(profile.date_of_birth)}</div></div><div class="card stat"><div class="label">الدولة</div><div class="value">الجزائر</div></div></div>`
  if(p==='profile')h=`<div class="card"><h2>الملف الشخصي</h2><div class="form"><div class="field"><label>اسم المستخدم</label><input value="${esc(profile.username)}" readonly></div><div class="field"><label>الاسم</label><input value="${esc(profile.first_name+' '+profile.last_name)}" readonly></div><div class="field"><label>تاريخ الميلاد</label><input value="${profile.date_of_birth}" readonly></div><div class="field"><label>العمر</label><input value="${age(profile.date_of_birth)}" readonly></div></div></div>`
  if(p==='plans'){let r=await sb.from('plans').select('id,name,price_usdt,duration_days,furi_amount').eq('active',true).order('price_usdt');h='<div class="grid">'+(r.data||[]).map(x=>`<div class="card"><h3>${esc(x.name)}</h3><div class="stat value">${x.price_usdt} USDT</div><div class="muted">${x.duration_days} يوم • ${x.furi_amount} FURI</div><div class="actions"><button class="btn primary" onclick="startPayment('${esc(x.id)}')">الدفع عبر Trust Wallet</button></div></div>`).join('')+'</div><div id="paymentBox" class="card section hidden"></div>'}
+ if(p==='deposit')h=await depositPage()
+ if(p==='withdraw')h=await withdrawPage()
+ if(p==='history')h=await historyPage()
  if(p==='ledger'){let r=await sb.from('furi_ledger').select('amount,entry_type,note,created_at').order('created_at',{ascending:false}).limit(50);h='<div class="card"><h2>سجل FURI</h2>'+(r.error?'<div class="notice error">تعذر قراءة السجل.</div>':table(r.data))+'</div>'}
  if(p==='admin')h=await adminPage()
  content.innerHTML=h
@@ -115,6 +118,11 @@ async function adminPage(){
  return `<div class="card"><h2>لوحة الإدارة</h2><div class="muted">المستخدمون: ${data.length}</div>${table(data)}</div>`
 }
 function table(a){if(!a?.length)return '<div class="muted">لا توجد بيانات.</div>';let cols=Object.keys(a[0]);return '<table class="table"><thead><tr>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+a.map(r=>'<tr>'+cols.map(c=>'<td>'+esc(r[c])+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
+async function depositPage(){const r=await sb.from('deposit_requests').select('amount,tx_hash,status,created_at').eq('user_id',session.user.id).order('created_at',{ascending:false});return '<div class="grid"><div class="card"><h2>إيداع USDT</h2><div class="notice">الشبكة: BNB Smart Chain (BEP20)<br>عنوان الاستقبال: <b>0xA010Ae84fe4230282502086828138ff758809ddC</b></div><div class="field"><label>المبلغ USDT</label><input id="depAmount" type="number" min="0" step="0.000001"></div><div class="field"><label>Tx Hash</label><input id="depTx" placeholder="0x..."></div><div class="actions"><button class="btn primary" onclick="submitDeposit()">إرسال إثبات الإيداع</button></div><div id="depMsg"></div></div><div class="card"><h2>طلبات الإيداع</h2>'+table(r.data)+'</div></div>'}
+async function submitDeposit(){const amount=Number(document.getElementById('depAmount').value),tx=document.getElementById('depTx').value.trim();if(!(amount>0)||!/^0x[a-fA-F0-9]{64}$/.test(tx))return showMsg('أدخل مبلغًا صحيحًا وTX Hash صحيحًا.',true);const r=await sb.from('deposit_requests').insert({user_id:session.user.id,amount,tx_hash:tx,network:'BSC',asset:'USDT'});if(r.error)showMsg(r.error.message,true);else{page('deposit')}}
+async function withdrawPage(){const r=await sb.from('withdrawal_requests').select('amount,destination_address,status,tx_hash,created_at').eq('user_id',session.user.id).order('created_at',{ascending:false});return '<div class="grid"><div class="card"><h2>طلب سحب USDT</h2><div class="field"><label>المبلغ USDT</label><input id="wdAmount" type="number" min="0" step="0.000001"></div><div class="field"><label>عنوان BSC</label><input id="wdAddress" placeholder="0x..."></div><div class="notice">السحب يُسجل كطلب مراجعة. لا يتم وضع مفتاح خاص في المتصفح.</div><button class="btn primary" onclick="submitWithdrawal()">إرسال طلب السحب</button></div><div class="card"><h2>طلبات السحب</h2>'+table(r.data)+'</div></div>'}
+async function submitWithdrawal(){const amount=Number(document.getElementById('wdAmount').value),address=document.getElementById('wdAddress').value.trim();if(!(amount>0)||!/^0x[a-fA-F0-9]{40}$/.test(address))return showMsg('أدخل مبلغًا وعنوان BSC صحيحًا.',true);const r=await sb.from('withdrawal_requests').insert({user_id:session.user.id,amount,destination_address:address,network:'BSC',asset:'USDT'});if(r.error)showMsg(r.error.message,true);else page('withdraw')}
+async function historyPage(){const [d,w]=await Promise.all([sb.from('deposit_requests').select('amount,tx_hash,status,created_at').eq('user_id',session.user.id).order('created_at',{ascending:false}),sb.from('withdrawal_requests').select('amount,destination_address,status,tx_hash,created_at').eq('user_id',session.user.id).order('created_at',{ascending:false})]);return '<div class="card"><h2>سجل العمليات</h2><h3>الإيداعات</h3>'+table(d.data||[])+'<h3>السحوبات</h3>'+table(w.data||[])+'</div>'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]) )}
 init()
 </script>
